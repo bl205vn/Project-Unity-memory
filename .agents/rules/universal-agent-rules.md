@@ -22,6 +22,7 @@ trigger: always_on
 
 **Root:** `.specs/` (Source of Truth).
 **Update Rule:** If you change code that affects the project state, update the relevant .specs file immediately.
+**DATE RULE:** Whenever you edit ANY `.specs` file, you MUST update the `**Last Updated:** [YYYY-MM-DD]` field at the top of the file to the current date. Do NOT skip this.
 
 | Document          | File Path                            | Purpose / Trigger                                                                          |
 | :---------------- | :----------------------------------- | :----------------------------------------------------------------------------------------- |
@@ -30,6 +31,7 @@ trigger: always_on
 | **@ROADMAP**      | `.specs/project/ROADMAP.md`          | **[MED]** Milestones and timeline.                                                         |
 | **@STATE**        | `.specs/project/STATE.md`            | **[LOG]** Decisions, blockers, risks, and lessons learned.                                 |
 | **@CONVENTIONS**  | `.specs/project/CONVENTIONS.md`      | **[MED]** Coding rules and patterns.                                                       |
+| **@FEATURE_SPEC** | `.specs/features/[feature]/spec.md`  | **[HIGH]** Specific architecture, scope, and libraries for a sub-project.                  |
 | **@TASKS**        | `.specs/features/[feature]/tasks.md` | **[HIGH]** Granular feature execution plan (loads automatically inside specific features). |
 
 ---
