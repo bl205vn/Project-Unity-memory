@@ -1,37 +1,19 @@
-# ARCHITECTURE: <PROJECT_NAME>
+# ARCHITECTURE: Kiến trúc Code & Tư duy Hệ thống
 
-**Last Updated:** [YYYY-MM-DD]
+**Last Updated:** 2026-07-02
+
 > **AI CONTEXT:** This document is the authoritative technical reference. Read this FIRST for any technical question. Do not guess architectural patterns — verify here.
 
 ---
 
-## 1. High-Level Structure
-[Mô tả kiến trúc tổng quan của dự án, ví dụ: MVC, ECS, Component-based...]
+## 1. Data-Driven Design
+- **Quy tắc tuyệt đối:** Không viết chết (hardcode) các thông số trong code.
+- Toàn bộ thông tin cấu hình màn chơi, giá tiền vật phẩm shop, thuộc tính các loại phải được đọc từ file cấu hình ngoài (JSON hoặc ScriptableObject).
 
-### Sơ đồ luồng (Game Flow Diagram)
-[Thêm sơ đồ Mermaid flowchart tại đây]
+## 2. Finite State Machine (FSM)
+- Quản lý luồng hoạt động của game (và cả nhân vật) chặt chẽ qua các Trạng thái (State) rõ ràng.
+- **Nghiêm cấm** sử dụng các cờ hiệu boolean (`bool isJumping`, `bool isRunning`) lồng chéo nhau vô tội vạ tạo thành code "Spaghetti".
 
----
-
-## 2. Identified Patterns
-[Liệt kê các design pattern chính đang sử dụng. Ví dụ: Singleton, Observer, Object Pooling...]
-
-## 3. Data Flow & Performance
-- **GC Alloc Rules:** [Luật quản lý bộ nhớ, tối ưu Garbage Collector]
-- **Render Optimization:** [Luật tối ưu render, batching, UI]
-
-## 4. Code Organization & Conventions
-**Structure Approach:** [Ví dụ: Feature-based folders]
-**File Naming:** [Ví dụ: PascalCase]
-**Testing Strategy:** [Play mode test, Edit mode test...]
-
-## 5. Structural Tree (Unity Assets)
-```text
-Assets/
-├── Core/
-├── UI/
-└── Features/
-```
-
-## 6. Shared Utilities & Core APIs
-[Mô tả các API hoặc hàm tiện ích chung quan trọng nhất để tái sử dụng]
+## 3. Observer Pattern (Event System)
+- Sử dụng hệ thống Event (C# Action hoặc UnityEvent) để giảm thiểu sự phụ thuộc trực tiếp (Tight Coupling) giữa các Class.
+- Mẫu kiến trúc này bắt buộc dùng chủ yếu để giao tiếp giữa Code Gameplay/Logic với Code UI. (VD: Nhân vật mất máu -> Phát Event -> UI nghe Event tự động trừ thanh máu).
