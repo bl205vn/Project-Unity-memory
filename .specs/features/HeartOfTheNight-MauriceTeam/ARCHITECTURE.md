@@ -129,8 +129,17 @@
 ## 20. 2D Visual & Animation Architecture
 
 - **2-Piece Visual Setup (Zero-Offset):** Nhân vật được chia thành 2 GameObjects duy nhất: `UpperBody` và `LowerBody` với tọa độ nội bộ luôn khóa ở mức `localPosition = (0,0,0)`. Các trạng thái toàn thân (Lướt, Leo tường, Chết) sẽ được phát trực tiếp trên `LowerBody`, đồng thời tắt (`SpriteRenderer.enabled = false`) cục `UpperBody`. Tuyệt đối không dùng Transform để bù trừ sự sai lệch ảnh.
-- **Moonwalk Mechanism:**
+- **Moonwalk Mechanism & Visual Decoupling:**
   1. Hình ảnh toàn thân (Scale X) luôn lật theo hướng ngắm chuột (Aiming Direction) để giữ tự nhiên.
-  2. Nếu hướng Di chuyển ngược chiều với hướng Ngắm, truyền `RunSpeed = -1` (thông qua Multiplier của Animator State) để phát ngược hoạt ảnh chân (Moonwalk).
+  2. Sử dụng `LateUpdate` trong `PlayerAnimation` để ép Scale của `LowerBody` khớp với `UpperBody` khi đang cầm súng, đè lên logic lật hình vật lý của `PlayerMovement`. Điều này tách bạch hoàn toàn Hướng Vật Lý (`IsFacingRight`) và Hướng Hình Ảnh, giải quyết triệt để lỗi "vặn xoắn" và lật chân sai hướng.
+  3. Nếu hướng Di chuyển vật lý ngược chiều với hướng Ngắm, truyền `RunSpeed = -1` (thông qua Multiplier của Animator State) để phát ngược hoạt ảnh chân (Moonwalk).
 - **Pivot Alignment Standard:** Đối với Sprite cắt sát viền khác size, bắt buộc phải dùng **Sprite Editor -> Custom Pivot** và ghim vòng tròn Pivot vào đúng vị trí cơ thể cố định (như vùng bụng) ở MỌI frame để chống giật (jitter).
 - **Depth Sorting:** Sử dụng thuần túy `Sorting Layer` và `Order in Layer` (Hoặc trục Z để làm Parallax). Tuyệt đối KHÔNG cấu hình `Transparency Sort Mode: Y=1` (vì đó là trick của Top-Down 2D, không áp dụng cho Platformer).
+
+## 21. Separation of Concerns: Gameplay vs Animation
+
+- **Nguyên tắc "Kẻ quyết định" và "Kẻ nghe lệnh":**
+  - `PlayerMovement` (Gameplay) là nơi **duy nhất** được phép đọc Input (`Input.GetAxisRaw`) và chịu trách nhiệm quyết định trạng thái vật lý, logic.
+  - `PlayerAnimation` (Visual) đóng vai trò là "kẻ nghe lệnh". Trách nhiệm duy nhất của nó là nhìn vào trạng thái của `PlayerMovement` và phát hình ảnh/hoạt ảnh tương ứng. Tuyệt đối hạn chế việc `PlayerAnimation` tự đọc Input.
+- **Data-Driven Communication (Roadmap):** 
+  - Khuyến khích sử dụng Struct Data (VD: `AnimationData`) hoặc Expose Public Properties (`public Vector2 MoveInput { get; }`) để truyền dữ liệu từ Movement sang Animation. Tránh Tight Coupling (việc Animation phải liên tục gọi hỏi Movement hoặc tự đoán state bằng cách đọc lại Input).

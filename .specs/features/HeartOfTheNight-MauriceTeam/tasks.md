@@ -13,9 +13,10 @@
 
 - [ ] **Task 7:** Refactor Wall Check Logic (`PlayerMovement.cs`). Đổi `Front/Back` thành `Right/Left` cố định, xóa code lật Transform trong hàm `Turn()` để tách bạch vật lý và hình ảnh.
 - [x] **Task 8:** Hoàn thiện kiến trúc "2 Cục Visual" (`UpperBody` & `LowerBody`). Reset `localPosition = (0,0,0)`, đồng bộ 100% Custom Pivot về phần bụng trong Sprite Editor.
-- [ ] **Task 9:** Cấu hình Animator State Machine. Xử lý logic bật/tắt `UpperBody` khi lướt/leo tường, và lập trình biến `RunSpeed` để xử lý Moonwalk (chạy lùi) khi hướng đi ngược hướng súng.
+- [x] **Task 9:** Cấu hình Animator State Machine. Xử lý logic bật/tắt `UpperBody` khi lướt/leo tường, và lập trình biến `RunSpeed` để xử lý Moonwalk (chạy lùi) khi hướng đi ngược hướng súng.
 - [ ] **Task 10:** Xây dựng hệ thống Vũ khí Data-Driven (10 biến thể súng chuột trái/phải). Áp dụng kiến trúc: 3 logic đạn cốt lõi (Thường, Laze, AOE) + tinh chỉnh qua ScriptableObject.
 
 ## Backlog
 
-- (Trống - Đang tập trung xử lý các task ở Sprint hiện tại)
+- [x] **Task (Backlog):** Refactor Kiến trúc FSM-Callback Animation. Đã chuyển đổi giao tiếp giữa `PlayerMovement` và `PlayerAnimation` sang mô hình Callback, loại bỏ triệt để việc Animation phải tự dò trạng thái, fix dứt điểm lỗi kẹt State và Moonwalk Dash. Đảm bảo nguyên tắc: Movement quyết định trạng thái, Animation phản ứng.
+- [x] **Task (Backlog):** Tinh chỉnh Game Feel cho Wall Jump Animation. Đã hoàn thiện mẹo đảo Scale trong `PlayerAnimation` để tái sử dụng clip `Duoi-TruotTuong` mô phỏng động tác đạp tường bật ra mà không đụng chạm đến logic vật lý của FSM.

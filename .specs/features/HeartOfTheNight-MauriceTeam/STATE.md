@@ -12,6 +12,27 @@
   - **Hệ thống 2 Cục Visual (Upper/Lower):** Quyết định loại bỏ cục FullBody. Mọi animation toàn thân (Lướt, Leo tường) sẽ được phát trực tiếp trên `LowerBody` (kèm theo ẩn `UpperBody`). Để làm được điều này, BẮT BUỘC toàn bộ sprite (Thân trên, Thân dưới, Nguyên người) phải được canh chỉnh Custom Pivot tập trung vào 1 điểm cốt lõi (VÙng bụng) trong Sprite Editor. Tọa độ Y cục bộ của cả 2 GameObject được reset về 0 tuyệt đối (Zero-Offset).
   - **Moonwalk (Chạy lùi):** Cả thân trên và thân dưới BẮT BUỘC lật (Flip) theo hướng chuột (Aim) để tránh lỗi "gãy cột sống". Nếu hướng di chuyển (A/D) ngược với hướng ngắm, kích hoạt thông số `RunSpeed = -1` trong Animator để tua ngược hoạt ảnh chân.
   - **Layer Sorting (Màn hình ngang):** Khẳng định KHÔNG sử dụng `Y=1` Custom Axis (chỉ dành cho Top-Down). Platformer 2D sử dụng `Sorting Layer` (Background/Gameplay/Foreground) và `Order in Layer` để xử lý che khuất (Depth).
+- **[2026-07-17] Kiến trúc Giao tiếp Movement - Animation (FSM-Callback):**
+  - **Vấn đề:** Việc `PlayerAnimation` tự polling FSM và Input dẫn đến lỗi kẹt hoạt ảnh, và việc sai tên State khiến Animator ngó lơ lệnh chuyển đổi.
+  - **Quyết định (ADR):** Áp dụng kiến trúc **FSM-Callback**. `PlayerMovement` gọi `_animation.OnStateChanged(newState)` trực tiếp tại `TransitionToState`, biến `PlayerAnimation` thành Listener phản ứng với FSM.
+  - **Moonwalk Dash Fix:** Khi Lướt (`Dashing`), cất súng (ẩn UpperBody). Để chân lật đúng hướng lướt thay vì hướng chuột vô hình, `LateUpdate` chỉ khóa góc chân theo thân trên NẾU thân trên đang hiển thị (`activeSelf == true`).
+- **[2026-07-17] Kỹ thuật "Visual Trick" cho Wall Jump Animation:**
+  - **Vấn đề:** Khi nhảy búng tường (Wall Jump), nhân vật lật mặt văng ra ngoài ngay lập tức. Nếu tái sử dụng clip `Duoi-TruotTuong` (mặc định được vẽ là bám tường bên phải và nhìn sang trái), việc lật mặt vật lý sẽ khiến sprite bị lật theo (thành bám tường trái), làm chân nhân vật đạp vào không khí thay vì đạp vào tường.
+  - **Quyết định (ADR):** Giữ nguyên vật lý lật mặt lập tức trong `PlayerMovement`. Trong `PlayerAnimation.LateUpdate()`, kiểm tra nếu `CurrentState == WallJumping` và clip đang phát là `Duoi-TruotTuong` thì TẠM THỜI đảo ngược Scale (`moveSign *= -1f`).
+  - **Kết quả:** Nhân vật giữ được tạo hình "chân đạp vào tường" hoàn hảo trong khoảng thời gian nhảy tường (`wallJumpTime`) mà không làm ô nhiễm logic gameplay vật lý. Gọn gàng và an toàn tuyệt đối.
+- **[2026-07-17] Khắc phục Zero-Time Initialization Bug (Gun Timer):**
+  - **Vấn đề:** Khi mới chạy game, `Time.time = 0` và biến `_lastShootInputTime = 0`. Phép toán `Time.time - _lastShootInputTime <= 1.5s` luôn đúng, khiến nhân vật rút súng vô cớ lúc mới vào màn.
+  - **Quyết định (ADR):** Gán thẳng `_lastShootInputTime = -999f` ngay khi khởi tạo biến. Cực kỳ đơn giản và triệt để.
+- **[2026-07-17] Hoàn thiện Logic Bắn trên Không (Airborne Shooting) & Lỗi Kẹt Frame:**
+  - **Vấn đề 1 (Execution Order):** Bấm Nhảy, `PlayerMovement` gọi `OnStateChanged` TRƯỚC khi `PlayerAnimation.Update()` chạy. `_isHoldingGun` giữ giá trị cũ của Grounded, làm kẹt chân ở dáng cầm súng mà thân trên thì bị ẩn.
+  - **Giải quyết 1:** Ép gọi `UpdateGunState()` ngay dòng đầu hàm `OnStateChanged` để lấy trạng thái súng chuẩn xác theo mili-giây.
+  - **Vấn đề 2 (Mất chân & Chồng chéo):** Nếu ẩn thân dưới khi bắn trên không thì nhân vật bị cụt. Nếu giữ nguyên thì 2 tay chồng lên nhau.
+  - **Quyết định (ADR):** Nếu `_isHoldingGun == true` trên không → THAY THẾ clip chân (`Nhay`/`Duoi-TruotTuong`) bằng `ThanDuoi-dichuyen/dungban`. Bổ sung luồng `else` trong `Update()` để TRẢ LẠI clip gốc ngay tắp lự khi nhả chuột giữa chừng. Giúp nhân vật luôn liền mạch, đủ tay chân.
+- **[2026-07-17] Coyote Time & Dash Frame Override (Wall Cling Dash):**
+  - **Vấn đề 1 (Coyote Time):** Bấm mũi tên lùi ra xa tường để lướt khiến `IsSliding` bị ngắt ngay lập tức, bỏ qua điều kiện bật tường.
+  - **Giải quyết 1:** Thay thế `IsSliding` bằng biến `nearWall` kết hợp **Coyote Time** (`LastOnWallRightTime > 0 || LastOnWallLeftTime > 0`) trong hàm `HandleDashChecks()`. Giữ lại "ký ức" bám tường trong vài mili-giây để lướt ngược chuẩn xác.
+  - **Vấn đề 2 (Frame Override):** Dù đã lướt bật ngược thành công, nhưng animation vẫn úp mặt vào tường. Nguyên nhân do `HandleInput()` liên tục ghi đè cờ `IsFacingRight` dựa trên phím ép tường đang giữ ở mọi frame, làm mất tác dụng lật mặt của hàm Dash.
+  - **Giải quyết 2:** Khóa chức năng đổi hướng của Input khi đang lướt bằng điều kiện `if (!IsDashing && _moveInput.x != 0)` trong `HandleInput()`. Đảm bảo hướng vật lý và animation không bị giật (flicker) giữa chừng.
 - **[2026-07-16] Kiến trúc Hoạt ảnh & Điều khiển ngắm bắn (Upper/Lower Body Split):**
   - **Tách Hierarchy Visuals:** Chia Player Visual thành `UpperBody` (chứa súng) và `LowerBody` (chân). Giải quyết triệt để vấn đề "Moonwalk" (chạy lùi) và tránh bùng nổ tổ hợp animation (Combinatorial Explosion).
   - **Logic lật (Flip):** `PlayerMovement` chỉ lật `LowerBody` dựa theo phím di chuyển, kèm theo tự lật local position của `_frontWallCheckPoint` và `_backWallCheckPoint` để vật lý đúng. `PlayerAttack` điều khiển lật `UpperBody` dựa vào vị trí chuột.
